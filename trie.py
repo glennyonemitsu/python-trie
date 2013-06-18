@@ -1,6 +1,6 @@
 
 
-class Trie:
+class Trie(object):
 
     def __init__(self):
         self.path = {}
@@ -8,27 +8,25 @@ class Trie:
         self.value_valid = False
 
     def __setitem__(self, key, value):
-        head = key[0]
+        head, tail = key[0], key[1:]
         if head in self.path:
             node = self.path[head]
         else:
             node = Trie()
             self.path[head] = node
 
-        if len(key) > 1:
-            remains = key[1:]
-            node.__setitem__(remains, value)
+        if tail:
+            node[tail] = value
         else:
             node.value = value
             node.value_valid = True
 
     def __delitem__(self, key):
-        head = key[0]
+        head, tail = key[0], key[1:]
         if head in self.path:
             node = self.path[head]
-            if len(key) > 1:
-                remains = key[1:]
-                node.__delitem__(remains)
+            if tail:
+                del node[tail]
             else:
                 node.value_valid = False
                 node.value = None
@@ -36,28 +34,25 @@ class Trie:
                 del self.path[head]
 
     def __getitem__(self, key):
-        head = key[0]
-        if head in self.path:
-            node = self.path[head]
-        else:
+        head, tail = key[0], key[1:]
+        try:
+            if head in self.path:
+                node = self.path[head]
+                if tail:
+                    return node[tail]
+                elif node.value_valid:
+                    return node.value
             raise KeyError(key)
-        if len(key) > 1:
-            remains = key[1:]
-            try:
-                return node.__getitem__(remains)
-            except KeyError:
-                raise KeyError(key)
-        elif node.value_valid:
-            return node.value
-        else:
+        except KeyError:
+            # reraised since recursion causes key to shrink
             raise KeyError(key)
 
     def __contains__(self, key):
         try:
-            self.__getitem__(key)
+            self[key]
+            return True
         except KeyError:
             return False
-        return True
 
     def __len__(self):
         n = 1 if self.value_valid else 0
@@ -67,7 +62,7 @@ class Trie:
 
     def get(self, key, default=None):
         try:
-            return self.__getitem__(key)
+            return self[key]
         except KeyError:
             return default
 
